@@ -3,7 +3,7 @@ import { FlatList, Text, View, TouchableOpacity } from 'react-native';
 import { useQuery, gql } from '@apollo/client';
 import { getFavourites, removeFavourite } from '../utils/favourites';
 import NoodleItem from '../components/NoodleItem';
-import { useFocusEffect, Stack, useRouter, usePathname } from 'expo-router';  // Import useRouter e usePathname aqui
+import { useFocusEffect, Stack, useRouter, usePathname } from 'expo-router';  
 import { Ionicons } from '@expo/vector-icons';
 import { useFilter } from '../context/Filter';
 import FilterControls from '../components/FilterControls';
