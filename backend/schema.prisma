@@ -21,6 +21,8 @@ model InstantNoodle {
   imageURL       String    @default("")
   category       Category? @relation("InstantNoodle_category", fields: [categoryId], references: [id])
   categoryId     String?   @map("category")
+  reviewsCount   Int?      @default(0)
+  lastReviewedAt DateTime?
   createdAt      DateTime? @default(now())
 
   @@index([categoryId])
