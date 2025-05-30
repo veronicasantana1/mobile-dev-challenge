@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Noodle } from "../types";
 import { router } from "expo-router";
-import { moderateScale, scale, verticalScale } from "react-native-size-matters";
+import { moderateScale, scale } from "react-native-size-matters";
 
 const GET_NOODLE_DETAILS = gql`
   query GetNoodleDetails($id: ID!) {
@@ -25,9 +25,11 @@ const GET_NOODLE_DETAILS = gql`
 type Props = {
   id: string;
   name: string;
+  isFavourite?: boolean;
+  onRemoveFavourite?: () => void;
 };
 
-export function NoodleItem({ id, name }: Props) {
+export function NoodleItem({ id, name, isFavourite, onRemoveFavourite }: Props) {
   const { loading, data } = useQuery<{ instantNoodle: Noodle }>(
     GET_NOODLE_DETAILS,
     {
@@ -62,7 +64,21 @@ export function NoodleItem({ id, name }: Props) {
               {"🔥".repeat(noodle.spicinessLevel)}
             </Text>
             <Text style={styles.nameText}>{noodle.name}</Text>
-            <Text style={styles.countryText}>{`#${noodle.originCountry}`}</Text>
+            <Text style={styles.countryText}>
+              {`#${noodle.originCountry}`}
+            </Text>
+
+            {isFavourite && onRemoveFavourite && (
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation(); 
+                  onRemoveFavourite();
+                }}
+                style={styles.removeButton}
+              >
+                <Text style={styles.removeButtonText}>Remove from favorites</Text>
+              </Pressable>
+            )}
           </View>
         </ImageBackground>
       )}
@@ -105,4 +121,17 @@ const styles = StyleSheet.create({
     color: "white",
     textAlign: "center",
   },
+  removeButton: {
+    marginTop: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: "#FF3B30",
+    borderRadius: 4,
+  },
+  removeButtonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
 });
+
+export default NoodleItem;
