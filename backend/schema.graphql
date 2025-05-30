@@ -6,6 +6,7 @@ type InstantNoodle {
   name: String
   brand: String
   spicinessLevel: Int
+  spicinessDescription: String
   originCountry: InstantNoodleOriginCountryType
   rating: Int
   imageURL: String
