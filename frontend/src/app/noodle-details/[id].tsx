@@ -6,8 +6,12 @@ import {
   Image,
   ScrollView,
   StyleSheet,
-  Button,
+  Pressable,
 } from "react-native";
+
+import { useEffect, useState } from 'react';
+import { addFavourite, removeFavourite, isFavourite } from '@/app/utils/favourites';
+
 import { gql, useQuery, useMutation } from "@apollo/client";
 
 const GET_NOODLE_DETAILS = gql`
@@ -42,6 +46,22 @@ const UPDATE_REVIEWS_COUNT = gql`
 
 export default function NoodlesDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [favourite, setFavourite] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      isFavourite(id).then(setFavourite);
+    }
+  }, [id]);
+  
+  const toggleFavourite = async () => {
+    if (favourite) {
+      await removeFavourite(id);
+    } else {
+      await addFavourite(id);
+    }
+    setFavourite(!favourite);
+  };
 
   const { loading, error, data } = useQuery(GET_NOODLE_DETAILS, {
     variables: { id },
@@ -128,12 +148,34 @@ export default function NoodlesDetails() {
       </View>
 
       <View style={styles.reviewSection}>
-        <Button
-          title={updating ? "Submitting..." : "Leave Review"}
+        <Pressable
+          onPress={toggleFavourite}
+          style={[
+            styles.button,
+            favourite ? styles.removeButton : styles.addButton,
+          ]}
+        >
+          <Text style={styles.buttonText}>
+            {favourite ? 'Remove from Favourites' : 'Add to Favourites'}
+          </Text>
+        </Pressable>
+
+        <Pressable
           onPress={handleLeaveReview}
           disabled={updating}
-        />
-      </View>
+          style={({ pressed }) => [
+            styles.button,
+            styles.reviewButton,
+            updating && styles.disabledButton,
+            pressed && !updating && styles.pressed,
+          ]}
+        >
+          <Text style={styles.buttonText}>
+            {updating ? 'Submitting...' : 'Leave Review'}
+          </Text>
+      </Pressable>
+    </View>
+
     </ScrollView>
   );
 }
@@ -181,5 +223,31 @@ const styles = StyleSheet.create({
   },
   reviewSection: {
     marginTop: 16,
+    gap: 12,
+  },
+  button: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  addButton: {
+    backgroundColor: "#007AFF", 
+  },
+  removeButton: {
+    backgroundColor: "#FF3B30", 
+  },
+  reviewButton: {
+    backgroundColor: "#34C759", 
+  },
+  disabledButton: {
+    backgroundColor: "#ccc",
+  },
+  pressed: {
+    opacity: 0.7,
   },
 });
