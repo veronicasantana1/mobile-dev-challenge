@@ -5,6 +5,7 @@ import {
   select,
   relationship,
   timestamp,
+  virtual,
 } from '@keystone-6/core/fields';
 import { allowAll } from '@keystone-6/core/access';
 
@@ -26,6 +27,21 @@ export const lists = {
         },
         defaultValue: 3,
         ui: { description: 'Scale of 1 (mild) to 5 (🔥)' },
+      }),
+      spicinessDescription: virtual({
+        field: graphql.field({
+          type: graphql.String,
+          resolve(item) {
+            const level = (item as { spicinessLevel: number }).spicinessLevel;
+            if (level <= 2) return 'Mild';
+            if (level <= 4) return 'Medium';
+            return 'Hot';
+          },
+        }),
+        ui: {
+          description: 'Description of spiciness level',
+          itemView: { fieldMode: 'read' },
+        },
       }),
       originCountry: select({
         type: 'enum',
