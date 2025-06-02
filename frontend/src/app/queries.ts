@@ -7,6 +7,7 @@ export const GET_NOODLES = gql`
       name
       spicinessLevel
       originCountry
+      imageURL
     }
   }
 `;

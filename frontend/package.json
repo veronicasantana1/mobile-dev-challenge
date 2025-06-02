@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
+    "@expo/react-native-action-sheet": "^4.1.1",
     "@expo/vector-icons": "^14.1.0",
+    "@mobile-dev-challenge/shared": "file:../shared",
     "@react-native-picker/picker": "^2.11.0",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",

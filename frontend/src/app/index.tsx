@@ -1,114 +1,145 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
   ActivityIndicator,
   StyleSheet,
   FlatList,
-  TextInput,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker"; 
 import { useQuery } from "@apollo/client";
 import { GET_NOODLES } from "./queries";
 import { NoodleItem } from "./components/NoodleItem";
 import { Stack } from "expo-router";
+import { originCountryOptions as originCountryOptionsFromShared } from "@mobile-dev-challenge/shared";
+import { Stepper } from "./components/Stepper";
+import { ActionSheetSelector } from "./components/ActionSheetSelector";
+import { Noodle } from "./types";
+import { moderateScale } from "react-native-size-matters";
 
-const originCountryOptions = [
-  { label: "All", value: "" },
-  { label: "South Korea", value: "south_korea" },
-  { label: "Indonesia", value: "indonesia" },
-  { label: "Malaysia", value: "malaysia" },
-  { label: "Thailand", value: "thailand" },
-  { label: "Japan", value: "japan" },
-  { label: "Singapore", value: "singapore" },
-  { label: "Vietnam", value: "vietnam" },
-  { label: "China", value: "china" },
-  { label: "Taiwan", value: "taiwan" },
-  { label: "Philippines", value: "philippines" },
-];
+
+const originCountryOptions = [...originCountryOptionsFromShared];
 
 export default function NoodleListScreen() {
   const [spicinessLevel, setSpicinessLevel] = useState<number | undefined>(undefined);
   const [originCountry, setOriginCountry] = useState<string>("");
 
-  const filters = [];
-  
-  if (spicinessLevel !== undefined) {
-    filters.push({ spicinessLevel: { equals: spicinessLevel } });
-  }
-  if (originCountry && originCountry !== "") {
-    filters.push({ originCountry: { equals: originCountry } });
-  }
+  const variables = useMemo(() => (
+    spicinessLevel !== undefined || originCountry
+      ? {
+          where: {
+            AND: [
+              ...(spicinessLevel !== undefined
+                ? [{ spicinessLevel: { equals: spicinessLevel } }]
+                : []),
+              ...(originCountry
+                ? [{ originCountry: { equals: originCountry } }]
+                : []),
+            ],
+          },
+        }
+      : {}
+  ), [spicinessLevel, originCountry]);
 
-  const variables = filters.length > 0 ? { where: { AND: filters } } : {};
-
-  const { loading, error, data } = useQuery(GET_NOODLES, {
+  const { data, loading, error, previousData } = useQuery(GET_NOODLES, {
     variables,
-    fetchPolicy: "network-only", 
+    fetchPolicy: "cache-and-network",
   });
 
-  if (loading) return <ActivityIndicator style={styles.loader} size="large" />;
-  if (error) return <Text style={styles.error}>Error: {error.message}</Text>;
+  const noodles = data?.instantNoodles || previousData?.instantNoodles || [];
+
+  const renderItem = useCallback(
+    ({ item }: { item: Noodle }) => (
+      <NoodleItem
+        id={item.id}
+        name={item.name}
+        spicinessLevel={item.spicinessLevel}
+        originCountry={item.originCountry}
+        imageURL={item.imageURL}
+      />
+    ),
+    []
+  );
+
+  if (error) {
+    return <Text style={styles.error}>Error: {error.message}</Text>;
+  }
 
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerTitle: "Noodles" }} />
-
       <View style={styles.filters}>
-        <Text>Spiciness Level (1-5):</Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          maxLength={1}
-          placeholder="Enter spiciness"
-          value={spicinessLevel?.toString() || ""}
-          onChangeText={(text) => {
-            const val = parseInt(text, 10);
-            setSpicinessLevel(val >= 1 && val <= 5 ? val : undefined);
-          }}
-        />
-
-        <Text>Origin Country:</Text>
-        <Picker
+        <View style={styles.sliderContainer}>
+          <Text style={styles.sliderLabel}>
+            {`Spiciness Level: ${spicinessLevel ?? "Any"}`}
+          </Text>
+          <Stepper
+            value={spicinessLevel}
+            onChange={setSpicinessLevel}
+            onClear={() => setSpicinessLevel(undefined)}
+          />
+        </View>
+        <ActionSheetSelector
+          label="Origin Country"
+          options={originCountryOptions}
           selectedValue={originCountry}
-          onValueChange={(value) => setOriginCountry(value)}
-          style={styles.picker}
-        >
-          {originCountryOptions.map(({ label, value }) => (
-            <Picker.Item key={value} label={label} value={value} />
-          ))}
-        </Picker>
+          onSelect={setOriginCountry}
+          onClear={() => setOriginCountry("")}
+          placeholder="Any country"
+          buttonColor="#ff4500"
+          selectButtonLabel="Select Country"
+        />
       </View>
-
+      {loading && (
+        <View style={styles.loadingIndicator}>
+          <ActivityIndicator size="small" color="#ff4500" />
+        </View>
+      )}
       <FlatList
-        data={data?.instantNoodles || []}
+        data={noodles}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <NoodleItem {...item} />}
+        renderItem={renderItem}
         numColumns={2}
         showsVerticalScrollIndicator={false}
-        directionalLockEnabled
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={10}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  loader: { flex: 1, justifyContent: "center", alignItems: "center" },
-  error: { color: "red", padding: 16 },
-  filters: { marginBottom: 16 },
-  input: {
-    height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    marginBottom: 12,
-    marginTop: 8,
+  container: { 
+    flex: 1, 
+    padding: moderateScale(16) 
   },
-  picker: {
-    height: 50,
-    width: "100%",
-    marginBottom: 12,
-    marginTop: 8,
+  loader: { 
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center" 
+  },
+  error: {
+    color: "red",
+    padding: moderateScale(16),
+    textAlign: "center",
+    marginTop: moderateScale(20),
+  },
+  filters: {
+    marginBottom: moderateScale(16),
+  },
+  sliderContainer: {
+    alignItems: "center",
+    marginBottom: moderateScale(16),
+  },
+  sliderLabel: {
+    fontSize: moderateScale(16),
+    fontWeight: "500",
+    marginBottom: moderateScale(8),
+  },
+  loadingIndicator: {
+    padding: moderateScale(8),
+    alignItems: "center",
+    justifyContent: "center",
+    height: moderateScale(40),
   },
 });

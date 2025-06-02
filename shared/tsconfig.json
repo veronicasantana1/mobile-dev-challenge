@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "target": "es6",
+    "skipLibCheck": true
+  },
+  "include": ["enums/**/*.ts"]
+}
