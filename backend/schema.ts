@@ -28,21 +28,6 @@ export const lists = {
         defaultValue: 3,
         ui: { description: 'Scale of 1 (mild) to 5 (🔥)' },
       }),
-      spicinessDescription: virtual({
-        field: graphql.field({
-          type: graphql.String,
-          resolve(item) {
-            const level = (item as { spicinessLevel: number }).spicinessLevel;
-            if (level <= 2) return 'Mild';
-            if (level <= 4) return 'Medium';
-            return 'Hot';
-          },
-        }),
-        ui: {
-          description: 'Description of spiciness level',
-          itemView: { fieldMode: 'read' },
-        },
-      }),
       originCountry: select({
         type: 'enum',
         options: [
@@ -92,28 +77,22 @@ export const lists = {
     },
 
     hooks: {
-      validateInput: async ({
-        operation,
-        resolvedData,
-        item,
-        addValidationError,
-      }) => {
-        if (operation === 'update' && resolvedData.reviewsCount !== undefined) {
+      validateInput: async ({ resolvedData, item, addValidationError }) => {
+        if (resolvedData.reviewsCount !== undefined) {
           const newCount = resolvedData.reviewsCount;
           const oldCount = item?.reviewsCount ?? 0;
-          if (newCount < oldCount) {
+
+          if (item === undefined && newCount < 0) {
+            addValidationError('reviewsCount cannot be negative.');
+          }
+          if (item !== undefined && newCount < oldCount) {
             addValidationError('reviewsCount cannot be decreased.');
           }
         }
       },
-
-      resolveInput: async ({ operation, resolvedData, item }) => {
-        if (operation === 'update' && resolvedData.reviewsCount !== undefined) {
-          const newCount = resolvedData.reviewsCount;
-          const oldCount = item?.reviewsCount ?? 0;
-          if (newCount > oldCount) {
-            resolvedData.lastReviewedAt = new Date().toISOString();
-          }
+      resolveInput: async ({ resolvedData }) => {
+        if (resolvedData.reviewsCount !== undefined) {
+          resolvedData.lastReviewedAt = new Date().toISOString();
         }
         return resolvedData;
       },
