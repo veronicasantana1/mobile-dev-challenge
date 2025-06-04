@@ -1,4 +1,4 @@
-import { Stack, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import {
   View,
   Text,
@@ -6,32 +6,35 @@ import {
   Image,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
 } from "react-native";
 import { gql, useQuery } from "@apollo/client";
-
-const GET_NOODLE_DETAILS = gql`
-  query GetNoodleDetails($id: ID!) {
-    instantNoodle(where: { id: $id }) {
-      id
-      name
-      brand
-      spicinessLevel
-      originCountry
-      rating
-      imageURL
-      category {
-        name
-      }
-    }
-  }
-`;
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useState } from "react";
+import { GET_NOODLE_BY_ID } from "../queries";
 
 export default function NoodlesDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { loading, error, data } = useQuery(GET_NOODLE_DETAILS, {
+  const { loading, error, data } = useQuery(GET_NOODLE_BY_ID, {
     variables: { id },
     skip: !id,
   });
+  const [bookmark, setBookmark] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkBookmark = async () => {
+      if (!id) return;
+      try {
+        const bookmarksString = await AsyncStorage.getItem("bookmarks");
+        const bookmarks: string[] = bookmarksString ? JSON.parse(bookmarksString) : [];
+        setBookmark(bookmarks.includes(id));
+      } catch (error) {
+        console.error("Error checking bookmark:", error);
+      }
+    };
+    checkBookmark();
+  }, [id]);
+
 
   if (loading) {
     return (
@@ -51,9 +54,39 @@ export default function NoodlesDetails() {
 
   const noodle = data.instantNoodle;
 
+  const toggleBookmark = async (itemId: string) => {
+    try {
+      const bookmarksString = await AsyncStorage.getItem("bookmarks");
+      let bookmarks: string[] = bookmarksString ? JSON.parse(bookmarksString) : [];
+      
+      const isBookmarked = bookmarks.includes(itemId);
+      
+      if (isBookmarked) {
+        bookmarks = bookmarks.filter(id => id !== itemId);
+        await AsyncStorage.setItem("bookmarks", JSON.stringify(bookmarks));
+        setBookmark(false);
+        alert("Removed from favorites!");
+      } else {
+        bookmarks = [...bookmarks, itemId];
+        await AsyncStorage.setItem("bookmarks", JSON.stringify(bookmarks));
+        setBookmark(true);
+        alert("Added to favorites!");
+      }
+    } catch (error) {
+      alert("Error toggling bookmark. Please try again.");
+      console.error("Error toggling bookmark:", error);
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Stack.Screen options={{ title: noodle.name }} />
+      <Stack.Screen options={{ title: noodle.name, 
+        headerRight: () => (
+          <TouchableOpacity onPress={() =>toggleBookmark(noodle.id)}>
+            <Text style={{ fontSize: 24, color: "red" }}>{bookmark ? "♥" : "♡"}</Text>
+          </TouchableOpacity>
+        ),
+       }} />
 
       {noodle.imageURL && (
         <Image

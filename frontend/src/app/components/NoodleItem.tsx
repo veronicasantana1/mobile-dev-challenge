@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Noodle } from "../types";
 import { router } from "expo-router";
-import { moderateScale, scale, verticalScale } from "react-native-size-matters";
+import { moderateScale, scale } from "react-native-size-matters";
 
 const GET_NOODLE_DETAILS = gql`
   query GetNoodleDetails($id: ID!) {
