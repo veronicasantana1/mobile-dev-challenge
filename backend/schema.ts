@@ -7,6 +7,7 @@ import {
   timestamp,
 } from '@keystone-6/core/fields';
 import { allowAll } from '@keystone-6/core/access';
+import { originCountryOptions } from '@mobile-dev-challenge/shared';
 
 export const lists = {
   InstantNoodle: list({
@@ -29,18 +30,7 @@ export const lists = {
       }),
       originCountry: select({
         type: 'enum',
-        options: [
-          { label: 'South Korea', value: 'south_korea' },
-          { label: 'Indonesia', value: 'indonesia' },
-          { label: 'Malaysia', value: 'malaysia' },
-          { label: 'Thailand', value: 'thailand' },
-          { label: 'Japan', value: 'japan' },
-          { label: 'Singapore', value: 'singapore' },
-          { label: 'Vietnam', value: 'vietnam' },
-          { label: 'China', value: 'china' },
-          { label: 'Taiwan', value: 'taiwan' },
-          { label: 'Philippines', value: 'philippines' },
-        ],
+        options: originCountryOptions,
         validation: { isRequired: true },
       }),
       rating: integer({

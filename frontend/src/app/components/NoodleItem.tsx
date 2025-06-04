@@ -1,70 +1,50 @@
-import { useQuery, gql } from "@apollo/client";
+import React from "react";
 import {
   View,
   Text,
   ImageBackground,
-  ActivityIndicator,
   Pressable,
   StyleSheet,
 } from "react-native";
-import { Noodle } from "../types";
 import { router } from "expo-router";
-import { moderateScale, scale, verticalScale } from "react-native-size-matters";
-
-const GET_NOODLE_DETAILS = gql`
-  query GetNoodleDetails($id: ID!) {
-    instantNoodle(where: { id: $id }) {
-      name
-      spicinessLevel
-      originCountry
-      imageURL
-    }
-  }
-`;
+import { moderateScale, scale } from "react-native-size-matters";
 
 type Props = {
   id: string;
   name: string;
+  spicinessLevel: number;
+  originCountry: string;
+  imageURL?: string;
 };
 
-export function NoodleItem({ id, name }: Props) {
-  const { loading, data } = useQuery<{ instantNoodle: Noodle }>(
-    GET_NOODLE_DETAILS,
-    {
-      variables: { id },
-    }
-  );
-
-  const noodle = data?.instantNoodle;
-
-  if (loading)
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator />
-      </View>
-    );
-
-  if (!noodle) return null;
+export function NoodleItem({ id, name, spicinessLevel, originCountry, imageURL }: Props) {
+  const handlePress = React.useCallback(() => {
+    router.push(`/noodle-details/${id}?name=${name}`);
+  }, [id, name]);
 
   return (
     <Pressable
       style={styles.pressable}
-      onPress={() => router.push(`/noodle-details/${id}?name=${name}`)}
+      onPress={handlePress}
     >
-      {noodle.imageURL && (
+      {imageURL ? (
         <ImageBackground
-          source={{ uri: noodle.imageURL }}
+          source={{ uri: imageURL }}
           style={styles.imageBackground}
           resizeMode="stretch"
         >
           <View style={styles.overlay}>
             <Text style={styles.spicinessText}>
-              {"🔥".repeat(noodle.spicinessLevel)}
+              {"🔥".repeat(spicinessLevel)}
             </Text>
-            <Text style={styles.nameText}>{noodle.name}</Text>
-            <Text style={styles.countryText}>{`#${noodle.originCountry}`}</Text>
+            <Text style={styles.nameText}>{name}</Text>
+            <Text style={styles.countryText}>{`#${originCountry}`}</Text>
           </View>
         </ImageBackground>
+      ) : (
+        <View style={[styles.imageBackground, { backgroundColor: '#e0e0e0' }]}>
+          <Text style={styles.nameText}>{name}</Text>
+        </View>
       )}
     </Pressable>
   );
@@ -82,6 +62,7 @@ const styles = StyleSheet.create({
   imageBackground: {
     flex: 1,
     aspectRatio: 1,
+    justifyContent: 'center',
   },
   overlay: {
     flex: 1,

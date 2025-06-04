@@ -1,0 +1,17 @@
+{
+  "name": "@mobile-dev-challenge/shared",
+  "version": "1.0.0",
+  "description": "Shared types and enums between frontend and backend",
+  "main": "dist/enums/originCountryOptions.js",
+  "types": "dist/enums/originCountryOptions.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
