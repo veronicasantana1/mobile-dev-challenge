@@ -5,6 +5,7 @@ import {
   select,
   relationship,
   timestamp,
+  virtual,
 } from '@keystone-6/core/fields';
 import { allowAll } from '@keystone-6/core/access';
 
@@ -61,9 +62,40 @@ export const lists = {
         many: false,
         ui: { displayMode: 'select' },
       }),
+      reviewsCount: integer({
+        validation: { isRequired: false, min: 0 },
+        defaultValue: 0,
+        ui: { description: 'Number of reviews for this noodle' },
+      }),
+      lastReviewedAt: timestamp({
+        validation: { isRequired: false },
+        ui: { description: 'Timestamp of most recent review' },
+      }),
       createdAt: timestamp({
         defaultValue: { kind: 'now' },
       }),
+    },
+
+    hooks: {
+      validateInput: async ({ resolvedData, item, addValidationError }) => {
+        if (resolvedData.reviewsCount !== undefined) {
+          const newCount = resolvedData.reviewsCount;
+          const oldCount = item?.reviewsCount ?? 0;
+
+          if (item === undefined && newCount < 0) {
+            addValidationError('reviewsCount cannot be negative.');
+          }
+          if (item !== undefined && newCount < oldCount) {
+            addValidationError('reviewsCount cannot be decreased.');
+          }
+        }
+      },
+      resolveInput: async ({ resolvedData }) => {
+        if (resolvedData.reviewsCount !== undefined) {
+          resolvedData.lastReviewedAt = new Date().toISOString();
+        }
+        return resolvedData;
+      },
     },
   }),
 
