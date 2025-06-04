@@ -108,8 +108,6 @@ export default function FavouritesScreen() {
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerTitle: "Favourites" }} />
-      <Text style={styles.title}>Favourites</Text>
-
       <TextInput
         placeholder="Search by name"
         value={searchTerm}
