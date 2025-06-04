@@ -89,9 +89,9 @@ export default function NoodleListScreen() {
           selectButtonLabel="Select Country"
         />
       </View>
-      {loading && (
-        <View style={styles.loadingIndicator}>
-          <ActivityIndicator size="small" color="#ff4500" />
+      {loading && noodles.length === 0 && (
+        <View style={styles.loader}>
+          <ActivityIndicator size="large" color="#ff4500" />
         </View>
       )}
       <FlatList
